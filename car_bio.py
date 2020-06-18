@@ -32,7 +32,7 @@ def ex_price1(str):
                 mst = mst + ml+" I-PRICE,"
         ret = ret.replace(rs, "\n["+mst+"]\n")   
     ret = ret.replace(",]","]")
-    print(ret)
+    #print(ret)
     return ret
 
 #提取10,234这种格式的数据
@@ -109,10 +109,10 @@ def ex_keyword(str):
     for key in kwlist:
         if not key:
             continue
-        print(key)
+        #print(key)
         str = str.replace(key, "\n["+kwlist[key]+"]\n")
     
-    print(str)
+    #print(str)
     return str
 
 #生成BIO格式的文件 1、从txt文件中按行读取，然后进行分析和替换后生成swp文件，该步骤对于标识词进行提取；2对于swp文件进行处理，主要是生成BIO格式；
@@ -122,7 +122,9 @@ def mk_bio(txtfile):
     swpfile = infile+"_swp"
     bfile = infile+"_bio.txt"
 
-    inf,sf,bf
+    inf = None
+    sf = None
+    bf = None
 
     try:
         inf = open(infile,'r')
@@ -141,7 +143,7 @@ def mk_bio(txtfile):
         line = ex_price2(line)   #处理带,的金额
         line = ex_price3(line)   #处理一般的金额
         line = ex_keyword(line)  #处理关键字的内容
-        sf.write(line)
+        sf.write(line+"\n")    #因为BIO的需求，每行中间有一个换行
     
     inf.close()
     sf.close() 
@@ -156,8 +158,6 @@ def mk_bio(txtfile):
     for line in sf.readlines():
         if not line:
             continue
-        if len(line) == 0:
-            continue
         mlist = list(line)
         if mlist[0] == '[':
             line = line.replace("[", "\n")
@@ -171,8 +171,6 @@ def mk_bio(txtfile):
             bf.write(line1)
     sf.close()
     bf.close()
-
-
 
 def get_entity_kw():
     
