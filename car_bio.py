@@ -16,6 +16,28 @@ import getopt
 
 kwlist = {}
 
+#提取姓氏和姓别
+def ex_person(str):
+
+    ret = str
+    pattern = re.compile("([\u4e00-\u9fa5]{0,1})(女士|先生)")  #    
+    m = pattern.findall(str)
+    for rs in m:
+        if rs[0] not in ["","好"]:
+            ret = ret.replace(rs[0], "["+rs[0]+" B-FNAME]")
+        mlist = list(rs[1])
+        mst = ""
+        for ml in mlist:
+            if mst == "":
+                mst = ml+" B-GENDER,"
+            else:
+                mst = mst + ml+" I-GENDER," 
+        ret = ret.replace(rs[1], "["+mst+"]")
+        break   
+    ret = ret.replace(",]","]")   
+    #print(ret)
+    return ret
+
 #提取32万、43万以及多少期贷款这种格式的数据
 def ex_price1(str):
 
@@ -30,7 +52,7 @@ def ex_price1(str):
                 mst = ml+" B-PRICE,"
             else:
                 mst = mst + ml+" I-PRICE,"
-        ret = ret.replace(rs, "\n["+mst+"]\n")   
+        ret = ret.replace(rs, "["+mst+"]")   
     ret = ret.replace(",]","]")
     #print(ret)
     return ret
@@ -50,7 +72,7 @@ def ex_price2(str):
                 mst = ml+" B-PRICE,"
             else:
                 mst = mst + ml+" I-PRICE,"
-        ret = ret.replace(rs, "\n["+mst+"]\n")   
+        ret = ret.replace(rs, "["+mst+"]")   
     ret = ret.replace(",]","]")
     return ret
 
@@ -68,7 +90,7 @@ def ex_price3(str):
                 mst = ml+" B-PRICE,"
             else:
                 mst = mst + ml+" I-PRICE,"
-        ret = ret.replace(rs, "\n["+mst+"]\n")   
+        ret = ret.replace(rs, "["+mst+"]")   
     ret = ret.replace(",]","]")
     return ret
 
@@ -86,7 +108,7 @@ def ex_mobile(str):
                 mst = ml+" B-PHONE,"
             else:
                 mst = mst + ml+" I-PHONE,"
-        ret = ret.replace(rs, "\n["+mst+"]\n")   
+        ret = ret.replace(rs, "["+mst+"]")   
     ret = ret.replace(",]","]")
     return ret
 
@@ -110,7 +132,7 @@ def ex_keyword(str):
         if not key:
             continue
         #print(key)
-        str = str.replace(key, "\n["+kwlist[key]+"]\n")
+        str = str.replace(key, "["+kwlist[key]+"]")
     
     #print(str)
     return str
@@ -137,12 +159,15 @@ def mk_bio(txtfile):
         if not line:
             continue
         line = line.strip() #去掉每行头尾空白
+        line = ex_person(line)   #个人信息的提取        
         line = ex_mobile(line)   #提取电话号码
         line = ex_48phone(line)  #处理400和800电话
         line = ex_price1(line)   #处理带万的金额
         line = ex_price2(line)   #处理带,的金额
         line = ex_price3(line)   #处理一般的金额
         line = ex_keyword(line)  #处理关键字的内容
+        line = line.replace("[", "\n[")
+        line = line.replace("]", "]\n")        
         sf.write(line+"\n")    #因为BIO的需求，每行中间有一个换行
     
     inf.close()
@@ -160,8 +185,8 @@ def mk_bio(txtfile):
             continue
         mlist = list(line)
         if mlist[0] == '[':
-            line = line.replace("[", "\n")
-            line = line.replace("]", "\n")
+            line = line.replace("[", "")
+            line = line.replace("]", "")
             line = line.replace(",", "\n")
             bf.write(line)
         else:
@@ -169,6 +194,7 @@ def mk_bio(txtfile):
                 mlist.remove(" ")
             line1 = " O\n".join(mlist)+"\n"
             bf.write(line1)
+        bf.write("\n")
     sf.close()
     bf.close()
 
@@ -215,5 +241,5 @@ if __name__ == "__main__":
     if inputfile == '':
         print("usage:python car_bio.py -i <input_file>")
         sys.exit(2) 
-
+    #ex_person("你好，先生！你好张先生，你好女士这是你的，这个王女士是我们的")
     mk_bio(inputfile)
