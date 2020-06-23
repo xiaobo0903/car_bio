@@ -22,17 +22,19 @@ def ex_person(str):
     ret = str
     pattern = re.compile("([\u4e00-\u9fa5]{0,1})(女士|先生)")  #    
     m = pattern.findall(str)
+    stmp = ''
     for rs in m:
-        if rs[0] not in ["","好"]:
-            ret = ret.replace(rs[0], "["+rs[0]+" B-FNAME]")
-        mlist = list(rs[1])
+        if rs[0] not in ["", "好", "请", "个", "您", "个"]:      #为了去掉一些不合规的姓氏
+            stmp = rs[0]
+        stmp = stmp + rs[1]
+        mlist = list(stmp)
         mst = ""
         for ml in mlist:
             if mst == "":
-                mst = ml+" B-GENDER,"
+                mst = ml+" B-FNAME,"
             else:
-                mst = mst + ml+" I-GENDER," 
-        ret = ret.replace(rs[1], "["+mst+"]")
+                mst = mst + ml+" I-FNAME," 
+        ret = ret.replace(stmp, "["+mst+"]")
         break   
     ret = ret.replace(",]","]")   
     #print(ret)
@@ -167,8 +169,10 @@ def mk_bio(txtfile):
         line = ex_price3(line)   #处理一般的金额
         line = ex_keyword(line)  #处理关键字的内容
         line = line.replace("[", "\n[")
-        line = line.replace("]", "]\n")        
-        sf.write(line+"\n")    #因为BIO的需求，每行中间有一个换行
+        line = line.replace("]", "]\n")
+        line = line.replace("\n\n", "\n")   #增加此行是为了防止有多个空行的情况，会导致句子的关系混乱  
+        sf.write(line)    #因为BIO的需求，每行中间有一个换行
+        sf.write("\n\n")          
     
     inf.close()
     sf.close() 
@@ -181,7 +185,8 @@ def mk_bio(txtfile):
         exit(2)
         
     for line in sf.readlines():
-        if not line:
+        if line in ['\n','\r\n']:
+            bf.write("\n")
             continue
         mlist = list(line)
         if mlist[0] == '[':
@@ -194,7 +199,6 @@ def mk_bio(txtfile):
                 mlist.remove(" ")
             line1 = " O\n".join(mlist)+"\n"
             bf.write(line1)
-        bf.write("\n")
     sf.close()
     bf.close()
 
