@@ -31,9 +31,9 @@ def ex_person(str):
         mst = ""
         for ml in mlist:
             if mst == "":
-                mst = ml+" B-FNAME,"
+                mst = ml+" B-FNA,"
             else:
-                mst = mst + ml+" I-FNAME," 
+                mst = mst + ml+" I-FNA," 
         ret = ret.replace(stmp, "["+mst+"]")
         break   
     ret = ret.replace(",]","]")   
@@ -51,9 +51,9 @@ def ex_price1(str):
         mst = ""
         for ml in mlist:
             if mst == "":
-                mst = ml+" B-PRICE,"
+                mst = ml+" B-PRI,"
             else:
-                mst = mst + ml+" I-PRICE,"
+                mst = mst + ml+" I-PRI,"
         ret = ret.replace(rs, "["+mst+"]")   
     ret = ret.replace(",]","]")
     #print(ret)
@@ -71,16 +71,15 @@ def ex_price2(str):
         mst = ""
         for ml in mlist:
             if mst == "":
-                mst = ml+" B-PRICE,"
+                mst = ml+" B-PRI,"
             else:
-                mst = mst + ml+" I-PRICE,"
+                mst = mst + ml+" I-PRI,"
         ret = ret.replace(rs, "["+mst+"]")   
     ret = ret.replace(",]","]")
     return ret
 
 #提取纯数字如:1000,这种格式的数据
 def ex_price3(str):
-
     ret = str
     pattern = re.compile("\\d{3}\\d{1,2}")  # 
     m = pattern.findall(str)
@@ -89,9 +88,9 @@ def ex_price3(str):
         mst = ""
         for ml in mlist:
             if mst == "":
-                mst = ml+" B-PRICE,"
+                mst = ml+" B-PRI,"
             else:
-                mst = mst + ml+" I-PRICE,"
+                mst = mst + ml+" I-PRI,"
         ret = ret.replace(rs, "["+mst+"]")   
     ret = ret.replace(",]","]")
     return ret
@@ -100,16 +99,16 @@ def ex_price3(str):
 def ex_mobile(str):
 
     ret = str
-    pattern = re.compile("1[34578]\\d{9}")  # 
+    pattern = re.compile("1[34578]\\d{7,10}")  # 
     m = pattern.findall(str)
     for rs in m:
         mlist = list(rs)
         mst = ""
         for ml in mlist:
             if mst == "":
-                mst = ml+" B-PHONE,"
+                mst = ml+" B-PHO,"
             else:
-                mst = mst + ml+" I-PHONE,"
+                mst = mst + ml+" I-PHO,"
         ret = ret.replace(rs, "["+mst+"]")   
     ret = ret.replace(",]","]")
     return ret
@@ -170,9 +169,9 @@ def mk_bio(txtfile):
         line = ex_keyword(line)  #处理关键字的内容
         line = line.replace("[", "\n[")
         line = line.replace("]", "]\n")
-        line = line.replace("\n\n", "\n")   #增加此行是为了防止有多个空行的情况，会导致句子的关系混乱  
+        #line = line.replace("\n\n", "\n")   #增加此行是为了防止有多个空行的情况，会导致句子的关系混乱  
         sf.write(line)    #因为BIO的需求，每行中间有一个换行
-        sf.write("\n\n")          
+        sf.write("\n\n") 
     
     inf.close()
     sf.close() 
@@ -185,19 +184,20 @@ def mk_bio(txtfile):
         exit(2)
         
     for line in sf.readlines():
-        if line in ['\n','\r\n']:
+        line = line.replace('\r','').replace('\n','').replace('\t','')
+        if line == "":
             bf.write("\n")
             continue
         mlist = list(line)
         if mlist[0] == '[':
             line = line.replace("[", "")
             line = line.replace("]", "")
-            line = line.replace(",", "\n")
+            line = line.replace(",", "\n")+"\n"
             bf.write(line)
         else:
             if " " in mlist:
                 mlist.remove(" ")
-            line1 = " O\n".join(mlist)+"\n"
+            line1 = " O\n".join(mlist)+" O\n"
             bf.write(line1)
     sf.close()
     bf.close()
