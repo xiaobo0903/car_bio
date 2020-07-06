@@ -16,113 +16,6 @@ import getopt
 
 kwlist = {}
 
-#提取姓氏和姓别
-def ex_person(str):
-
-    ret = str
-    pattern = re.compile("([\u4e00-\u9fa5]{0,1})(女士|先生)")  #    
-    m = pattern.findall(str)
-    stmp = ''
-    for rs in m:
-        if rs[0] not in ["", "好", "请", "个", "您", "个"]:      #为了去掉一些不合规的姓氏
-            stmp = rs[0]
-        stmp = stmp + rs[1]
-        mlist = list(stmp)
-        mst = ""
-        for ml in mlist:
-            if mst == "":
-                mst = ml+" B-FNA,"
-            else:
-                mst = mst + ml+" I-FNA," 
-        ret = ret.replace(stmp, "["+mst+"]")
-        break   
-    ret = ret.replace(",]","]")   
-    #print(ret)
-    return ret
-
-#提取32万、43万以及多少期贷款这种格式的数据
-def ex_price1(str):
-
-    ret = str
-    pattern = re.compile("\\d{2,3}[万|期]")  # 
-    m = pattern.findall(str)
-    for rs in m:
-        mlist = list(rs)
-        mst = ""
-        for ml in mlist:
-            if mst == "":
-                mst = ml+" B-PRI,"
-            else:
-                mst = mst + ml+" I-PRI,"
-        ret = ret.replace(rs, "["+mst+"]")   
-    ret = ret.replace(",]","]")
-    #print(ret)
-    return ret
-
-#提取10,234这种格式的数据
-def ex_price2(str):
-
-    ret = str
-    pattern = re.compile("\\d{2,4},\\d{3}")  # 
-    m = pattern.findall(str)
-    for rs in m:
-        mlist = list(rs)
-        mlist.remove(",") #去掉list中的","字符
-        mst = ""
-        for ml in mlist:
-            if mst == "":
-                mst = ml+" B-PRI,"
-            else:
-                mst = mst + ml+" I-PRI,"
-        ret = ret.replace(rs, "["+mst+"]")   
-    ret = ret.replace(",]","]")
-    return ret
-
-#提取纯数字如:1000,这种格式的数据
-def ex_price3(str):
-    ret = str
-    pattern = re.compile("\\d{3}\\d{1,2}")  # 
-    m = pattern.findall(str)
-    for rs in m:
-        mlist = list(rs)
-        mst = ""
-        for ml in mlist:
-            if mst == "":
-                mst = ml+" B-PRI,"
-            else:
-                mst = mst + ml+" I-PRI,"
-        ret = ret.replace(rs, "["+mst+"]")   
-    ret = ret.replace(",]","]")
-    return ret
-
-#提取手机号码,11位数字，为从1打头
-def ex_mobile(str):
-
-    ret = str
-    pattern = re.compile("1[34578]\\d{7,10}")  # 
-    m = pattern.findall(str)
-    for rs in m:
-        mlist = list(rs)
-        mst = ""
-        for ml in mlist:
-            if mst == "":
-                mst = ml+" B-PHO,"
-            else:
-                mst = mst + ml+" I-PHO,"
-        ret = ret.replace(rs, "["+mst+"]")   
-    ret = ret.replace(",]","]")
-    return ret
-
-#提取400或者800号码，这类号码是营销电话，不需提取，只需要消除掉即可，需要在提取金额前替换掉
-def ex_48phone(str):
-
-    ret = str
-    pattern = re.compile("[4|8]00\\d{5,7}")  # 
-    m = pattern.findall(str)
-    for rs in m:
-        ret = ret.replace(rs, "")   
-    return ret
-
 #把传入的字符串进行匹配，根据entity字典中的关键字做标记；
 def ex_keyword(str):
     
@@ -160,12 +53,6 @@ def mk_bio(txtfile):
         if not line:
             continue
         line = line.strip() #去掉每行头尾空白
-        line = ex_person(line)   #个人信息的提取        
-        line = ex_mobile(line)   #提取电话号码
-        line = ex_48phone(line)  #处理400和800电话
-        line = ex_price1(line)   #处理带万的金额
-        line = ex_price2(line)   #处理带,的金额
-        line = ex_price3(line)   #处理一般的金额
         line = ex_keyword(line)  #处理关键字的内容
         line = line.replace("[", "\n[")
         line = line.replace("]", "]\n")
@@ -183,7 +70,8 @@ def mk_bio(txtfile):
         print('文件打开错误')
         exit(2)
         
-    for line in sf.readlines():
+    lines = sf.readlines()
+    for line in lines:
         line = line.replace('\r','').replace('\n','').replace('\t','')
         if line == "":
             bf.write("\n")
